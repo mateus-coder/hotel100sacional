@@ -11,6 +11,7 @@ struct Estadias{
     int quant_diarias;
     int codigo_cliente;
     int numero_quarto;
+    char estado_da_estadia[80];///estado da estadia (emuso ou desocupada);
 };
 typedef struct Estadias estadia;
 ///-------------------
@@ -59,7 +60,7 @@ int funcaoCadastrarCliente(){
         }
     }
     if(arquivoNaoCriado){
-
+        ///erro não deu para criar o arquivo
     }
     else{
         printf("Digite um código para este cliente: ");
@@ -75,7 +76,7 @@ int funcaoCadastrarCliente(){
         aux.quant_estadias = 0;
         strcpy(aux.estado, "ausente");
 
-
+        ///verificando se tem algum código repetido
         fseek(arquivo,0,SEEK_SET);
         fread(&c, sizeof(c), 1, arquivo);
         while(!feof(arquivo) && !encontrado){
@@ -111,10 +112,9 @@ int funcaoCadastrarFuncionarios(){
             printf("Não foi possível criar o arquivo\n");
             arquivoNaoCriado = 1;
         }
-        system("pause");
     }
     if(arquivoNaoCriado){
-
+        ///erro não deu para criar o arquivo
     }
     else{
         printf("Digite um código para este funcionário: ");
@@ -171,9 +171,10 @@ int funcaoCadastrarQuarto(){
         }
     }
     if(arquivoNCriado){
-        //ERRO
+        ///ERRO
     }
     else{
+        ///inputs do usuário
         printf("Digite um número para este quarto: ");
         scanf("%d", &aux.numero);
         printf("Digite a quantidade de hospedes: ");
@@ -232,6 +233,7 @@ int gerarCodigoEstadia(){
 int funcaoCadastrarEstadia(char *nome,int quant_hospedes,char * entrada, char * saida){
     int statusEntrada, statusSaida, quant_diarias, aux_meses_inteiros, aux_anos_inteiros;
     int codigo,problema, dia_entrada, mes_entrada, ano_entrada, dia_saida, mes_saida, ano_saida;
+    ///validando data
     statusEntrada = funcaoValidarData(entrada);
     statusSaida = funcaoValidarData(saida);
     quant_diarias = 0;
@@ -249,7 +251,7 @@ int funcaoCadastrarEstadia(char *nome,int quant_hospedes,char * entrada, char * 
         ano_saida = ( (saida[6] - '0') * 1000) + ( (saida[7] - '0') * 100) + ( (saida[8] - '0') * 10) + (saida[9] - '0');
         if(ano_entrada > ano_saida){
             printf("ERRO!!! ANO DE ENTRADA MAIOR QUE O DE SAÍDA !!! \n");
-        }
+        }///final do ano de entrada maior que o de saída
         else{
             if(ano_entrada == ano_saida){
                 if(mes_entrada > mes_saida){
@@ -281,11 +283,9 @@ int funcaoCadastrarEstadia(char *nome,int quant_hospedes,char * entrada, char * 
                         }
                     }
                 }
-            }
+            }///final do ano == ano
             if(ano_entrada < ano_saida){
                 aux_anos_inteiros = ( (ano_saida - ano_entrada) - 1 ) * 360;
-
-
 
                 if(mes_entrada > mes_saida){
                     if(dia_entrada == dia_saida){
@@ -310,8 +310,8 @@ int funcaoCadastrarEstadia(char *nome,int quant_hospedes,char * entrada, char * 
                         }
                     }
                 }
-            }
-        }
+            }///final do ano de entra menor que o de saída
+        }///final do else
         printf("Quantidade de diárias = %d \n", quant_diarias);
         FILE * arquivoEstadia;
         arquivoEstadia = fopen("cadastroEstadias.txt", "r+b");
@@ -325,8 +325,10 @@ int funcaoCadastrarEstadia(char *nome,int quant_hospedes,char * entrada, char * 
             FILE * arquivoClientes;
             FILE * arquivoQuartos;
             codigo = gerarCodigoEstadia();
+            ///abrindo arquivos para leitura e escrita
             arquivoClientes = fopen("cadastroClientes.txt", "r+b");
             arquivoQuartos = fopen("cadastroQuartos.txt", "r+b");
+            ///posicionando no local desejado dentro do arquivo
             fseek(arquivoClientes, sizeof(c)*posicaoCliente, SEEK_SET);
             fseek(arquivoQuartos, sizeof(q)*posicaoQuarto, SEEK_SET);
             fseek(arquivoEstadia, 0, SEEK_END);
@@ -336,9 +338,8 @@ int funcaoCadastrarEstadia(char *nome,int quant_hospedes,char * entrada, char * 
                 e.codigo = codigo;
                 strcpy(e.data_entrada, entrada);
                 strcpy(e.data_saida, saida);
-                fread(&q, sizeof(q), 1, arquivoQuartos);
                 e.numero_quarto = q.numero;
-                fread(&c, sizeof(c), 1, arquivoClientes);
+                strcpy(e.estado_da_estadia, "emuso");
                 e.codigo_cliente = c.codigo;
                 e.quant_diarias = quant_diarias;
                 fseek(arquivoClientes, sizeof(c)*posicaoCliente, SEEK_SET);
@@ -545,12 +546,15 @@ void imprimiArquivoEstadias(){
         fseek(arquivo,0, SEEK_SET);
         fread(&e, sizeof(e), 1, arquivo);
         while(!feof(arquivo)){
-            printf("código : %d\n", e.codigo);
-            printf("data entrada : %s\n", e.data_entrada);
-            printf("data saída : %s\n", e.data_saida);
-            printf("quantidade de dias que pode ser reservado : %d\n", e.quant_diarias);
-            printf("código do cliente que reservou o imóvel : %d\n", e.codigo_cliente);
-            printf("número do quarto reservado : %d\n", e.numero_quarto);
+            if(strcmp(e.estado_da_estadia, "emuso") == 0){
+                printf("código : %d\n", e.codigo);
+                printf("data entrada : %s\n", e.data_entrada);
+                printf("data saída : %s\n", e.data_saida);
+                printf("quantidade de dias que pode ser reservado : %d\n", e.quant_diarias);
+                printf("código do cliente que reservou o imóvel : %d\n", e.codigo_cliente);
+                printf("número do quarto reservado : %d\n", e.numero_quarto);
+            }
+
             fread(&e, sizeof(e), 1, arquivo);
         }
     }
@@ -628,13 +632,16 @@ void funcaoMostrarTodasEstadiasDeUmCliente(char * nome){
         fseek(arquivo, sizeof(c) * posicao, SEEK_SET);
         fread(&c, sizeof(c), 1, arquivo);
         for(i = 0; i < c.quant_estadias;i++){
-            printf("\n------- %d º estadia -------\n", i+1);
-            printf("Código da estadia %d\n", c.estadiaEspecifica[i].codigo);
-            printf("Código do cliente %d\n", c.estadiaEspecifica[i].codigo_cliente);
-            printf("Data de entrada %s\n", c.estadiaEspecifica[i].data_entrada);
-            printf("Data de saída %s\n", c.estadiaEspecifica[i].data_saida);
-            printf("Número do quarto %d\n", c.estadiaEspecifica[i].numero_quarto);
-            printf("Quantidade de diárias %d\n", c.estadiaEspecifica[i].quant_diarias);
+            if(strcmp(c.estadiaEspecifica[i].estado_da_estadia, "emuso") == 0){
+                printf("\n------- %d º estadia -------\n", i+1);
+                printf("Código da estadia %d\n", c.estadiaEspecifica[i].codigo);
+                printf("Código do cliente %d\n", c.estadiaEspecifica[i].codigo_cliente);
+                printf("Data de entrada %s\n", c.estadiaEspecifica[i].data_entrada);
+                printf("Data de saída %s\n", c.estadiaEspecifica[i].data_saida);
+                printf("Número do quarto %d\n", c.estadiaEspecifica[i].numero_quarto);
+                printf("Quantidade de diárias %d\n", c.estadiaEspecifica[i].quant_diarias);
+            }
+
         }
     }
     fclose(arquivo);
@@ -647,12 +654,16 @@ int funcaoBaixaEmUmaEstadia(int numeroEstadia){
     arquivoClientes = fopen("cadastroClientes.txt", "r+b");
     FILE * arquivoQuartos;
     arquivoQuartos = fopen("cadastroQuartos.txt", "r+b");
+    FILE * arquivoEstadias;
+    arquivoEstadias = fopen("cadastroEstadias.txt", "r+b");
     int encontrei = 0;
     int i = 0;
+    int posicao = 0;
     cliente c;
     quarto q;
+    estadia e;
     fseek(arquivoQuartos, 0, SEEK_SET);
-    //atualizando status do quarto
+    ///atualizando status do quarto
     fread(&q, sizeof(q), 1, arquivoQuartos);
     while(!feof(arquivoQuartos) && !encontrei){
         if(q.numero == numeroEstadia){
@@ -663,9 +674,14 @@ int funcaoBaixaEmUmaEstadia(int numeroEstadia){
         }
         fread(&q, sizeof(q), 1, arquivoQuartos);
     }
+    fseek(arquivoQuartos, sizeof(q)* posicao, SEEK_SET);
+    fwrite(&q, sizeof(q), 1, arquivoQuartos);
+    fflush(arquivoQuartos);
+
     encontrei = 0;
+    posicao = 0;
     fseek(arquivoClientes, 0, SEEK_SET);
-    //atualizando o status da estadia do cliente
+    ///atualizando o status da estadia do cliente
     fread(&c, sizeof(c), 1, arquivoClientes);
 
     while(!feof(arquivoClientes) && !encontrei){
@@ -673,17 +689,40 @@ int funcaoBaixaEmUmaEstadia(int numeroEstadia){
         for(i = 0; i < c.quant_estadias;i++){
             if(c.estadiaEspecifica[i].numero_quarto == numeroEstadia){
                 encontrei = 1;
-                c.estadiaEspecifica[i].codigo = -1;
-                c.estadiaEspecifica[i].codigo_cliente = -1;
-                strcpy(c.estadiaEspecifica[i].data_entrada, "");
-                strcpy(c.estadiaEspecifica[i].data_saida, "");
-                c.estadiaEspecifica[i].numero_quarto = -1;
-                c.estadiaEspecifica[i].quant_diarias = -1;
-                fwrite(&c, sizeof(c), 1, arquivoClientes);
+                strcpy(c.estadiaEspecifica[i].estado_da_estadia, "desocupada");
             }
+        }
+        if(!encontrei){
+            posicao++;
         }
         fread(&c, sizeof(c), 1, arquivoClientes);
     }
+    fseek(arquivoClientes, sizeof(c)* posicao, SEEK_SET);
+    fwrite(&c, sizeof(c), 1, arquivoClientes);
+    fflush(arquivoClientes);
+
+    encontrei = 0;
+    posicao = 0;
+    fseek(arquivoEstadias, 0, SEEK_SET);
+    ///atualizando o status da estadia no cadastroestadias.txt
+    fread(&e, sizeof(e), 1, arquivoEstadias);
+
+    while(!feof(arquivoEstadias) && !encontrei){
+        if(e.numero_quarto == numeroEstadia){
+            encontrei = 1;
+            strcpy(e.estado_da_estadia, "desocupada");
+        }
+        else{
+            posicao++;
+        }
+        fread(&e, sizeof(e), 1, arquivoEstadias);
+    }
+    fseek(arquivoEstadias, sizeof(e)* posicao, SEEK_SET);
+    fwrite(&e, sizeof(e), 1, arquivoEstadias);
+    fflush(arquivoEstadias);
+
+    ///fechando os arquivos
+    fclose(arquivoEstadias);
     fclose(arquivoClientes);
     fclose(arquivoQuartos);
     return encontrei;
