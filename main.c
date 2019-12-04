@@ -9,7 +9,7 @@
 int main()
 {
     setlocale(LC_ALL, "portuguese");
-    int state1, state2, state3, quant_hospedes, state4, numero;
+    int state1, state2, state3, quant_hospedes, state4, state5, numero;
     state4 = 0;
     char nome[80], data_entrada[50], data_saida[50];
     int op;
@@ -112,16 +112,15 @@ int main()
         case 10:
             printf("Digite um número de quarto de uma estadia ocupada para dar baixa na mesma : ");
             scanf("%d", &numero);
-            funcaoBaixaEmUmaEstadia(numero);
+            state5 = funcaoBaixaEmUmaEstadia(numero);
+            if(state5){
+                printf("Baixa na estadia efetuada com sucesso!!\n");
+            }
+            else{
+                printf("ERRO!!!\n");
+            }
         }
     }while(op > 0 && op < 11);
-
-
-
-
-
-
-
 
     return 0;
 }
