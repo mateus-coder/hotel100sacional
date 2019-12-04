@@ -290,6 +290,7 @@ int funcaoCadastrarEstadia(char *nome,int quant_hospedes,char * entrada, char * 
                 if(mes_entrada > mes_saida){
                     if(dia_entrada == dia_saida){
                         quant_diarias = ( ((12 - mes_entrada) + (mes_saida)) * 30) + aux_anos_inteiros;
+
                     }
                     else{
                         aux_meses_inteiros = ( ((12 - mes_entrada) + (mes_saida)) - 1 ) * 30;
@@ -309,8 +310,20 @@ int funcaoCadastrarEstadia(char *nome,int quant_hospedes,char * entrada, char * 
                             }
                         }
                     }
+                    else{
+                        if(mes_entrada < mes_saida){
+                            if(dia_entrada == dia_saida){
+                                quant_diarias = ( ((12 - mes_entrada) + (mes_saida)) * 30) + aux_anos_inteiros;
+
+                            }
+                            else{
+                                aux_meses_inteiros = ( ((12 - mes_entrada) + (mes_saida)) - 1 ) * 30;
+                                quant_diarias = ( ((30 - dia_entrada) + (dia_saida)) + aux_meses_inteiros + aux_anos_inteiros);
+                            }
+                        }
+                    }
                 }
-            }///final do ano de entra menor que o de saída
+            }///final do ano de entrada menor que o de saída
         }///final do else
         printf("Quantidade de diárias = %d \n", quant_diarias);
         FILE * arquivoEstadia;
@@ -669,14 +682,19 @@ int funcaoBaixaEmUmaEstadia(int numeroEstadia){
         if(q.numero == numeroEstadia){
             encontrei = 1;
             strcpy(q.status, "desocupado");
-            fwrite(&q, sizeof(q), 1, arquivoQuartos);
-            fflush(arquivoQuartos);
         }
-        fread(&q, sizeof(q), 1, arquivoQuartos);
+        else{
+            posicao++;
+            fread(&q, sizeof(q), 1, arquivoQuartos);
+        }
+
     }
-    fseek(arquivoQuartos, sizeof(q)* posicao, SEEK_SET);
-    fwrite(&q, sizeof(q), 1, arquivoQuartos);
-    fflush(arquivoQuartos);
+    if(encontrei){
+        fseek(arquivoQuartos, sizeof(q)* posicao, SEEK_SET);
+        fwrite(&q, sizeof(q), 1, arquivoQuartos);
+        fflush(arquivoQuartos);
+    }
+
 
     encontrei = 0;
     posicao = 0;
@@ -694,12 +712,16 @@ int funcaoBaixaEmUmaEstadia(int numeroEstadia){
         }
         if(!encontrei){
             posicao++;
+            fread(&c, sizeof(c), 1, arquivoClientes);
         }
-        fread(&c, sizeof(c), 1, arquivoClientes);
+
     }
-    fseek(arquivoClientes, sizeof(c)* posicao, SEEK_SET);
-    fwrite(&c, sizeof(c), 1, arquivoClientes);
-    fflush(arquivoClientes);
+    if(encontrei){
+        fseek(arquivoClientes, sizeof(c)* posicao, SEEK_SET);
+        fwrite(&c, sizeof(c), 1, arquivoClientes);
+        fflush(arquivoClientes);
+    }
+
 
     encontrei = 0;
     posicao = 0;
@@ -714,12 +736,16 @@ int funcaoBaixaEmUmaEstadia(int numeroEstadia){
         }
         else{
             posicao++;
+            fread(&e, sizeof(e), 1, arquivoEstadias);
         }
-        fread(&e, sizeof(e), 1, arquivoEstadias);
+
     }
-    fseek(arquivoEstadias, sizeof(e)* posicao, SEEK_SET);
-    fwrite(&e, sizeof(e), 1, arquivoEstadias);
-    fflush(arquivoEstadias);
+    if(encontrei){
+        fseek(arquivoEstadias, sizeof(e)* posicao, SEEK_SET);
+        fwrite(&e, sizeof(e), 1, arquivoEstadias);
+        fflush(arquivoEstadias);
+    }
+
 
     ///fechando os arquivos
     fclose(arquivoEstadias);
