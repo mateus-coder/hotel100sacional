@@ -175,8 +175,7 @@ int funcaoCadastrarQuarto(){
     }
     else{
         ///inputs do usuário
-        printf("Digite um número para este quarto: ");
-        scanf("%d", &aux.numero);
+        aux.numero = rand() % 1000;
         printf("Digite a quantidade de hospedes: ");
         scanf("%d", &aux.quant_hospedes);
         printf("Digite o valor da diária deste quarto : ");
@@ -525,9 +524,10 @@ int funcaoVerificaExistenciaDeQuarto(int quant_hospedes){
 
 ///-------------------------funções que imprimem documentos texto ---------------------------
 
-void imprimiArquivoClientes(){
+void imprimiArquivoClientes(char* nome){
     FILE *arquivo;
     cliente c;
+    int encontrado = 0;
     arquivo = fopen("cadastroClientes.txt", "r+b");
     if(arquivo == NULL){
         printf("Erro na leitura do arquivo!!! \n");
@@ -535,12 +535,17 @@ void imprimiArquivoClientes(){
     else{
         fseek(arquivo,0, SEEK_SET);
         fread(&c, sizeof(c), 1, arquivo);
-        while(!feof(arquivo)){
-            printf("código : %d\n", c.codigo);
-            printf("nome : %s\n", c.nome);
-            printf("endereço : %s\n", c.endereco);
-            printf("telefone : %d\n", c.telefone);
-            fread(&c, sizeof(c), 1, arquivo);
+        while(!feof(arquivo) && !encontrado){
+            if(strcmp(c.nome, nome) == 0){
+                encontrado = 1;
+                printf("código : %d\n", c.codigo);
+                printf("nome : %s\n", c.nome);
+                printf("endereço : %s\n", c.endereco);
+                printf("telefone : %d\n", c.telefone);
+            }
+            else{
+                fread(&c, sizeof(c), 1, arquivo);
+            }
         }
     }
     fclose(arquivo);
@@ -598,9 +603,10 @@ void imprimiArquivoQuartos(){
     fclose(arquivo);
 }
 
-void imprimiArquivoFuncionarios(){
+void imprimiArquivoFuncionarios(char* nome){
     FILE *arquivo;
     funcionario f;
+    int encontrado = 0;
     arquivo = fopen("cadastroFuncionarios.txt", "r+b");
     if(arquivo == NULL){
         printf("Erro na leitura do arquivo!!! \n");
@@ -608,13 +614,18 @@ void imprimiArquivoFuncionarios(){
     else{
         fseek(arquivo,0, SEEK_SET);
         fread(&f, sizeof(f), 1, arquivo);
-        while(!feof(arquivo)){
-            printf("código : %d\n", f.codigo);
-            printf("nome : %s\n", f.nome);
-            printf("telefone : %d\n", f.telefone);
-            printf("cargo : %s\n", f.cargo);
-            printf("salário : %f\n", f.salario);
-            fread(&f, sizeof(f), 1, arquivo);
+        while(!feof(arquivo) && !encontrado){
+            if(strcmp(f.nome, nome) == 0){
+                encontrado = 1;
+                printf("código : %d\n", f.codigo);
+                printf("nome : %s\n", f.nome);
+                printf("telefone : %d\n", f.telefone);
+                printf("cargo : %s\n", f.cargo);
+                printf("salário : %f\n", f.salario);
+            }
+            else{
+                fread(&f, sizeof(f), 1, arquivo);
+            }
         }
     }
     fclose(arquivo);
@@ -662,7 +673,9 @@ void funcaoMostrarTodasEstadiasDeUmCliente(char * nome){
 
 ///função que da baixa em uma estadia
 
-int funcaoBaixaEmUmaEstadia(int numeroEstadia){
+int funcaoBaixaEmUmaEstadia(int numeroEstadia, float*total){
+
+    *total = 1;
     FILE * arquivoClientes;
     arquivoClientes = fopen("cadastroClientes.txt", "r+b");
     FILE * arquivoQuartos;
@@ -682,6 +695,7 @@ int funcaoBaixaEmUmaEstadia(int numeroEstadia){
         if(q.numero == numeroEstadia){
             encontrei = 1;
             strcpy(q.status, "desocupado");
+            *total = (*total) * q.valor_da_diaria;
         }
         else{
             posicao++;
@@ -705,15 +719,19 @@ int funcaoBaixaEmUmaEstadia(int numeroEstadia){
     while(!feof(arquivoClientes) && !encontrei){
         i = 0;
         for(i = 0; i < c.quant_estadias;i++){
-            if(c.estadiaEspecifica[i].numero_quarto == numeroEstadia){
+            if(c.estadiaEspecifica[i].numero_quarto == numeroEstadia && !encontrei){
                 encontrei = 1;
+                c.estadiaEspecifica[i].numero_quarto = -1;
                 strcpy(c.estadiaEspecifica[i].estado_da_estadia, "desocupada");
+                *total = (*total) * c.estadiaEspecifica[i].quant_diarias;
+                printf("quant %d\n", c.estadiaEspecifica[i].quant_diarias);
             }
         }
         if(!encontrei){
             posicao++;
             fread(&c, sizeof(c), 1, arquivoClientes);
         }
+
 
     }
     if(encontrei){
@@ -752,4 +770,45 @@ int funcaoBaixaEmUmaEstadia(int numeroEstadia){
     fclose(arquivoClientes);
     fclose(arquivoQuartos);
     return encontrei;
+}
+
+
+///função calcula a quantidade de pontos de fidelidade de determinado cliente
+
+int funcaoPontosDeFidelidade(char* nome){
+    cliente c;
+    int encontrado = 0;
+    int i;
+    int soma = 0;
+    FILE * arquivo;
+    arquivo = fopen("cadastroClientes.txt", "r+b");
+    if(arquivo == NULL){
+        return 0;
+    }
+    else{
+        fseek(arquivo, 0, SEEK_SET);
+        fread(&c, sizeof(c), 1, arquivo);
+        while(!feof(arquivo), !encontrado){
+            if(strcmp(c.nome, nome) == 0){
+                encontrado = 1;
+            }
+            else{
+                fread(&c, sizeof(c), 1, arquivo);
+            }
+        }
+        if(encontrado){
+            for(i = 0;i < c.quant_estadias;i++){
+                if(strcmp(c.estadiaEspecifica[i].estado_da_estadia, "desocupada") == 0){
+                    soma += (c.estadiaEspecifica[i].quant_diarias * 10);
+                }
+            }
+            if(soma == 0){
+                printf("Usuário provavelmente não deu baixa em nenhma estadia !!! \n");
+            }
+            return soma;
+        }
+        else{
+            return 0;
+        }
+    }
 }
